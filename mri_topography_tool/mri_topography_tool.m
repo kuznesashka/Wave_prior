@@ -17,6 +17,7 @@ for i = 32:99
     k = k+1;
 end
 
+
 % forward model for restricted orientations
 G1 = bst_gain_orient(G.Gain,G.GridOrient);
 G1 = G1(32:99,:);
@@ -83,7 +84,7 @@ function PlotMri(MRI, pos, h)
             imagesc(flipud(squeeze(MRI.Cube(:,cly,:))'))
             set(gca,'tag',num2str(1))
             hold on
-            plot(256-pos(1),clz,'r+', 'MarkerSize', 30);
+            plot(pos(1),clz,'r+', 'MarkerSize', 30);
             
             subplot(2,3,3)
             imagesc(flipud(squeeze(MRI.Cube(:,:,256-clz))'))
