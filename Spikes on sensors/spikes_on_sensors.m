@@ -8,7 +8,7 @@
 % 1. Import from bst Jordy data as Data
 % 2. Automatic spike detection
 
-f_low = 1;
+f_low = 5;
 f_high = 45;
 spike_ind = SpikeDetect(Data, f_low, f_high, 1);
 
@@ -34,41 +34,30 @@ for i = 1:Nsites
 end
 
 % 3.1 for manually detected spikes
-spike_mnl = Data.Events(1).times*Fs+1;
-clear ValMax IndMax
-for j = 1:length(spike_mnl)
-    spike = Ff(:,(spike_mnl(j)-10):(spike_mnl(j)+10));
-    [U,S,V] = svd(spike);
-    h = cumsum((diag(S)/norm(diag(S))).^2);
-    n = find(h>=0.95);
-    corr = MUSIC_scan(G2, U(:,1:n(1)));
-    
-    [ValMax(j), IndMax(j)] = max(corr);
-    j
-end
+% spike_mnl = Data.Events(1).times*Fs+1;
+% clear ValMax IndMax
+% for j = 1:length(spike_mnl)
+%     spike = Ff(:,(spike_mnl(j)-10):(spike_mnl(j)+10));
+%     %spike = Ff(:,(spike_mnl(j)));
+%     [U,S,V] = svd(spike);
+%     h = cumsum((diag(S)/norm(diag(S))).^2);
+%     n = find(h>=0.98);
+%     corr = MUSIC_scan(G2, U(:,1:n(1)));
+%     
+%     [ValMax(j), IndMax(j)] = max(corr);
+%     j
+% end
 
-figure
-hist(ValMax)
+% figure
+% hist(ValMax)
 
-ind_m = find(ValMax>=0.97);
-
-figure
-h = scatter3(G3.GridLoc(1:20:length(G3.GridLoc(:,1)),1),...
-    G3.GridLoc(1:20:length(G3.GridLoc(:,1)),2),...
-    G3.GridLoc(1:20:length(G3.GridLoc(:,1)),3));
-axis equal
-grid off
-axis off
-view(360, 360)
-hold on
-scatter3(G3.GridLoc(IndMax(ind_m),1),G3.GridLoc(IndMax(ind_m),2),...
-    G3.GridLoc(IndMax(ind_m),3), 100,'r', 'filled')
+% ind_m = find(ValMax>=0.98);
 
 
 % 3.2 for automatically detected spikes
 clear ValMax IndMax
 for j = 1:length(spike_ind)
-    spike = Ff(:,(spike_ind(j)-10):(spike_ind(j)+10));
+    spike = Ff(:,((spike_ind(j)-10):(spike_ind(j)+10)));
     [U,S,V] = svd(spike);
     h = cumsum((diag(S)/norm(diag(S))).^2);
     n = find(h>=0.95);
@@ -82,17 +71,22 @@ figure
 hist(ValMax)
 
 ind_m = find(ValMax>=0.97);
+IndMax_m = sort(IndMax(ind_m), 'ascend');
+y = accumarray(IndMax_m(:),1);
+y = y(y>0);
+IndMax_m = unique(IndMax_m);
 
 figure
-h = scatter3(G3.GridLoc(1:20:length(G3.GridLoc(:,1)),1),...
-    G3.GridLoc(1:20:length(G3.GridLoc(:,1)),2),...
-    G3.GridLoc(1:20:length(G3.GridLoc(:,1)),3));
+h = scatter3(G3.GridLoc(1:50:length(G3.GridLoc(:,1)),1),...
+    G3.GridLoc(1:50:length(G3.GridLoc(:,1)),2),...
+    G3.GridLoc(1:50:length(G3.GridLoc(:,1)),3));
 axis equal
 grid off
 axis off
 view(360, 360)
 hold on
-scatter3(G3.GridLoc(IndMax(ind_m),1),G3.GridLoc(IndMax(ind_m),2),G3.GridLoc(IndMax(ind_m),3), 100,'r', 'filled')
+scatter3(G3.GridLoc(IndMax_m,1),G3.GridLoc(IndMax_m,2),G3.GridLoc(IndMax_m,3), 100, y, 'filled')
+
 
 
 % 4. Clustering
