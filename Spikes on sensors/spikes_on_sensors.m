@@ -6,8 +6,8 @@
 % Alexei Ossadtchi, ossadtchi@gmail.com
 
 % 1. Import from bst Jordy data as Data
-% 2. Automatic spike detection
 
+% 2. Automatic spike detection
 f_low = 5;
 f_high = 45;
 spike_ind = SpikeDetect(Data, f_low, f_high, 1);
@@ -53,7 +53,6 @@ end
 
 % ind_m = find(ValMax>=0.98);
 
-
 % 3.2 for automatically detected spikes
 clear ValMax IndMax
 for j = 1:length(spike_ind)
@@ -64,6 +63,7 @@ for j = 1:length(spike_ind)
     corr = MUSIC_scan(G2, U(:,1:n(1)));
     
     [ValMax(j), IndMax(j)] = max(corr);
+    %loc{j} = RAP_MUSIC_scan(G2, U(:,1:n(1)), 0.97);
     j
 end
 
@@ -71,6 +71,8 @@ figure
 hist(ValMax)
 
 ind_m = find(ValMax>=0.97);
+spike_ind_m = spike_ind(ind_m);
+
 IndMax_m = sort(IndMax(ind_m), 'ascend');
 y = accumarray(IndMax_m(:),1);
 y = y(y>0);
@@ -88,23 +90,50 @@ hold on
 scatter3(G3.GridLoc(IndMax_m,1),G3.GridLoc(IndMax_m,2),G3.GridLoc(IndMax_m,3), 100, y, 'filled')
 
 
-
 % 4. Clustering
 src_idx = IndMax(ind_m);
 
 % stupid loop, there must be a different way
 for i = 1:length(src_idx)
     for j = 1:length(src_idx)
-        dist(i,j) = norm(G3.GridLoc(src_idx(i))-G3.GridLoc(src_idx(j)));
+        dist(i,j) = norm(G3.GridLoc(src_idx(i),:)-G3.GridLoc(src_idx(j),:));
     end
 end
 
-thr_dist = 0.02;
-dst = sum(dist>thr_dist);
-[ind, val] = max(dst);
-cluster{1} = 
+thr_dist = 0.01;
+k = 1;
+Nmin = 5;
+fl = 1;
+while fl == 1
+    dst = sum(dist<thr_dist,2);
+    [val, ind] = max(dst);
+    if val > Nmin
+        ind_nbh = find(dist(ind,:)<thr_dist);
+        cluster{k} = src_idx(ind_nbh);
+        spike_time{k} = spike_ind_m(ind_nbh);
+        src_idx = src_idx(setdiff(1:size(dist,1), ind_nbh));
+        spike_ind_m = spike_ind_m(setdiff(1:size(dist,1), ind_nbh));
+        dist = dist(setdiff(1:size(dist,1), ind_nbh),setdiff(1:size(dist,1), ind_nbh));
+        k = k + 1;
+        fl = 1;
+    else
+        fl = 0;
+    end
+end
 
-
+figure
+h = scatter3(G3.GridLoc(1:50:length(G3.GridLoc(:,1)),1),...
+    G3.GridLoc(1:50:length(G3.GridLoc(:,1)),2),...
+    G3.GridLoc(1:50:length(G3.GridLoc(:,1)),3));
+axis equal
+grid off
+axis off
+view(360, 360)
+hold on
+for i = 1:length(cluster)
+    scatter3(G3.GridLoc(cluster{i},1),G3.GridLoc(cluster{i},2), ...
+        G3.GridLoc(cluster{i},3), 100, repmat(i, 1, length(cluster{i})), 'filled')
+end
 
 
 % 5. Phase analysis on sensors
@@ -113,8 +142,6 @@ cluster{1} =
 [b,a] = butter(8,[25 35]/(Fs/2)); 
 Ff = filtfilt(b,a,Data.F(32:99,:)')';
 Ff_an = hilbert(Ff')';
-
-spike_mnl = Data.Events(1).times/0.004+1;
 
 k = 1;
 for i = 32:99
@@ -134,13 +161,14 @@ F_phase = unwrap(angle(Ff_an),2);
 
 [X,Y] = bst_project_2d(chan_loc(:,1), chan_loc(:,2), chan_loc(:,3),'2dlayout');
 
-for i = 1:length(spike_mnl)
-    figure
-    plot_topo(X, Y, F_phase(:,spike_mnl(i)))
-    caxis([0 20])
-    colorbar
+for i = length(cluster)
+    for j = 1:length(spike_time{i})
+        figure
+        plot_topo(X, Y, F_phase(:,spike_time{i}(j)))
+        caxis([-10 10])
+        colorbar
+    end
 end
-
 
 % 2.
 F_phase = angle(Ff_an(:,spike_ind(1):(spike_ind(1)+50)));
