@@ -1,4 +1,18 @@
 function corr = MUSIC_scan(G2, U)
+% -------------------------------------------------------
+% MUSIC scan
+% -------------------------------------------------------
+% FORMAT:
+%   corr = MUSIC_scan(G2, U)
+% INPUTS:
+%   G2 -- Nch x Nsources*2 forward model matrix
+%   U -- Nch x k signal subspace matrix
+%
+% OUTPUT:
+%   corr -- correlation for all sources
+% _______________________________________________________
+% Aleksandra Kuznetsova, kuznesashka@gmail.com
+% Alexei Ossadtchi, ossadtchi@gmail.com
 
 [Nsns, Nsrc2] = size(G2);
 Nsrc = Nsrc2/2;
@@ -16,5 +30,6 @@ d = c11c22(1:2:2*Nsrc).*c11c22(2:2:2*Nsrc) - c12.^2;
 l1 = sqrt(0.5*(tr+sqrt(tr.^2-4*d)));
 l2 = sqrt(tr-l1.^2);
 corr = max(l1, l2);
+
 end
 
