@@ -114,7 +114,7 @@ spike_ind = find(d>=thr);
 % size(spike_ind)
 
 diff = [30, spike_ind(2:length(spike_ind))-spike_ind(1:(length(spike_ind)-1))];
-spike_ind_red = spike_ind(diff>20);
+spike_ind_red = spike_ind(diff>10);
 % size(spike_ind_red)
 
 if check == 1
